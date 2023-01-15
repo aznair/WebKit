@@ -36,25 +36,34 @@ CSSContentDistributionValue::CSSContentDistributionValue(CSSValueID distribution
 {
 }
 
-CSSContentDistributionValue::~CSSContentDistributionValue() = default;
+Ref<CSSContentDistributionValue> CSSContentDistributionValue::create(CSSValueID distribution, CSSValueID position, CSSValueID overflow)
+{
+    return adoptRef(*new CSSContentDistributionValue(distribution, position, overflow));
+}
 
 String CSSContentDistributionValue::customCSSText() const
 {
-    StringBuilder builder;
-    if (m_distribution != CSSValueInvalid)
-        builder.append(nameLiteral(m_distribution));
-    if (m_position != CSSValueInvalid) {
-        if (m_position == CSSValueFirstBaseline)
-            builder.append(builder.isEmpty() ? "" : " ", "first baseline");
-        else if (m_position == CSSValueLastBaseline)
-            builder.append(builder.isEmpty() ? "" : " ", "last baseline");
-        else {
-            if (m_overflow != CSSValueInvalid)
-                builder.append(builder.isEmpty() ? "" : " ", nameLiteral(m_overflow));
-            builder.append(builder.isEmpty() ? "" : " ", nameLiteral(m_position));
-        }
+    auto position = m_position;
+    auto overflow = m_overflow;
+    switch (position) {
+    case CSSValueFirstBaseline:
+        position = CSSValueFirst;
+        overflow = CSSValueBaseline;
+        break;
+    case CSSValueLastBaseline:
+        position = CSSValueLast;
+        overflow = CSSValueBaseline;
+        break;
+    default:
+        break;
     }
-    return builder.toString();
+    return makeString(
+        m_distribution == CSSValueInvalid ? ""_s : nameLiteral(m_distribution),
+        m_distribution != CSSValueInvalid && position != CSSValueInvalid ? " "_s : ""_s,
+        position == CSSValueInvalid ? ""_s : nameLiteral(position),
+        position != CSSValueInvalid && overflow != CSSValueInvalid ? " "_s : ""_s,
+        overflow == CSSValueInvalid ? ""_s : nameLiteral(overflow)
+    );
 }
 
 bool CSSContentDistributionValue::equals(const CSSContentDistributionValue& other) const
